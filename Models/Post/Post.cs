@@ -9,35 +9,39 @@ namespace ReiAlgoAPI.Models.Post
     [JsonStringEnumMemberName("markdown")]
     Markdown,
     [JsonStringEnumMemberName("code")]
-    CODE,
+    Code,
     [JsonStringEnumMemberName("tip")]
     Tip,
+    [JsonStringEnumMemberName("fold")]
+    Fold,
   }
 
   // 添加其他需要的标签类型 TODO: 支持用户添加标签分类
   // post的分类
+  [JsonConverter(typeof(JsonStringEnumConverter))]
   public enum TagType
   {
+    [JsonStringEnumMemberName("tech")]
     Tech,
   }
 
   public class Post
   {
-    [JsonPropertyName("id123456")]
-    public string Id { get; set; }
+    [JsonPropertyName("id")]
+    public required string Id { get; set; }
     [JsonPropertyName("title")]
-    public string Title { get; set; }
+    public required string Title { get; set; }
     [JsonPropertyName("username")]
-    public string Username { get; set; }
+    public required string Username { get; set; }
     [JsonPropertyName("userLink")]
-    public string UserLink { get; set; }
+    public string? UserLink { get; set; }
     [JsonPropertyName("contents")]
-    public List<BaseBlogContent> Contents { get; set; }
+    public required List<BaseBlogContent> Contents { get; set; }
     [JsonPropertyName("createdAt")]
-    public DateTime CreatedAt { get; set; }
+    public required DateTime CreatedAt { get; set; }
     [JsonPropertyName("updatedAt")]
-    public DateTime UpdatedAt { get; set; }
+    public required DateTime UpdatedAt { get; set; }
     [JsonPropertyName("tags")]
-    public List<TagType> Tags { get; set; }
+    public List<TagType>? Tags { get; set; }
   }
 }

@@ -20,6 +20,7 @@
       <Folder Include="Migrations\" />
       <Folder Include="Repositories\" />
       <Folder Include="Services\user\" />
+      <Folder Include="Util\" />
     </ItemGroup>
 
 </Project>

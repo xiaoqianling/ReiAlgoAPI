@@ -4,9 +4,12 @@ namespace ReiAlgoAPI.Models.Post;
 
 public class TipContent : BaseBlogContent
 {
+    [JsonPropertyName("type")]
     public override ContentType Type => ContentType.Tip;
+    [JsonPropertyName("level")]
     public TipLevel Level { get; set; }
-    public string Content { get; set; }
+    [JsonPropertyName("content")]
+    public required string Content { get; set; }
 }
 
 
@@ -16,7 +19,7 @@ public enum TipLevel
 {
     [JsonStringEnumMemberName("tip")]
     Tip,
-    [JsonStringEnumMemberName("warn")]
+    [JsonStringEnumMemberName("warning")]
     Warning,
     [JsonStringEnumMemberName("error")]
     Error
