@@ -1,0 +1,75 @@
+server:
+  port: 8080
+spring:
+  # Database DataSource Configuration
+  datasource:
+    url: jdbc:mysql://localhost:3306/reialgo
+    username: root
+    password: 5621882 # 请替换为你的数据库密码
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # Connection pool configuration (using HikariCP by default)
+    hikari:
+      connection-timeout: 30000 # 30 seconds
+      idle-timeout: 600000 # 10 minutes
+      max-lifetime: 1800000 # 30 minutes
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+# MyBatis Configuration
+mybatis:
+  # Location of the MyBatis global configuration file
+#  config-location: classpath:mybatis-config.xml
+  # Location of mapper xml configuration files
+  mapper-locations: classpath:mapper/*.xml
+  # Package containing type aliases (entities)
+  type-aliases-package: com.rei.algo.model.entity
+  # MyBatis specific configuration properties (can also be set in mybatis-config.xml)
+  configuration:
+    # Enable automatic mapping of underscore case column names to camel case properties
+    map-underscore-to-camel-case: true
+    # Default executor type
+    # default-executor-type: SIMPLE
+    # Log SQL execution (useful for debugging, use logback/log4j2 config for production)
+    # log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# Logging configuration (using Logback by default)
+logging:
+  level:
+    root: INFO
+    com.rei.algo: DEBUG # Set your application's base package to DEBUG for more details
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.mybatis: INFO # Set to DEBUG or TRACE to see MyBatis logs
+    # To see SQL statements executed by MyBatis:
+    # com.rei.algo.mapper: TRACE
+  file:
+    name: logs/ReiAlgoLog.log
+
+# SpringDoc OpenAPI Configuration (Swagger UI)
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    # display-request-duration: true
+    # groups-order: DESC
+  api-docs:
+    path: /v3/api-docs
+
+# Actuator configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics,prometheus"
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# JWT Configuration
+app:
+  jwt:
+    # !!! 重要：请立即替换为强随机生成的密钥 (至少32字节) !!!
+    # !!! 例如，运行: openssl rand -base64 32                !!!
+    # !!! 不要使用下面的占位符或简单字符串！                !!!
+    secret: "PLACEHOLDER_replace_with_your_very_strong_secure_32_byte_plus_secret_key_here"
+    # 令牌有效期 (毫秒)，例如 3600000 = 1 小时, 86400000 = 1 天
+    expiration-ms: 3600000

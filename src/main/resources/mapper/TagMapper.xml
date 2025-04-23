@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rei.algo.mapper.TagMapper">
+
+    <resultMap id="BaseResultMap" type="com.rei.algo.model.entity.Tag">
+        <id property="tagId" column="tag_id"/>
+        <result property="name" column="name"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        tag_id, name
+    </sql>
+
+    <insert id="insert" parameterType="com.rei.algo.model.entity.Tag">
+        INSERT INTO tag (tag_id, name)
+        VALUES (#{tagId}, #{name})
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM tag WHERE tag_id = #{tagId}
+    </delete>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM tag
+        WHERE tag_id = #{tagId}
+    </select>
+
+    <select id="findByName" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM tag
+        WHERE name = #{name}
+    </select>
+
+    <select id="existsByName" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM tag WHERE name = #{name} LIMIT 1)
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM tag
+        ORDER BY name ASC
+    </select>
+
+    <select id="findTagsByPostId" resultMap="BaseResultMap">
+        SELECT t.tag_id, t.name
+        FROM tag t
+        JOIN post_tag pt ON t.tag_id = pt.tag_id
+        WHERE pt.post_id = #{postId}
+        ORDER BY t.name ASC
+    </select>
+
+    <!-- 批量插入标签，如果名称不存在的话 -->
+    <!-- 使用 INSERT ... ON DUPLICATE KEY UPDATE 来处理唯一性冲突 (需要 name 列有 UNIQUE 约束) -->
+    <insert id="insertBatchIfNotExists" parameterType="java.util.List">
+        INSERT INTO tag (tag_id, name)
+        VALUES
+        <foreach collection="list" item="tag" separator=",">
+            (#{tag.tagId}, #{tag.name})
+        </foreach>
+        ON DUPLICATE KEY UPDATE name = VALUES(name) <!-- 仅示例，如果 tag_id 也是主键/唯一，此策略可能不适用 -->
+        <!-- 另一种选择是 INSERT IGNORE -->
+        <!-- INSERT IGNORE INTO tag (tag_id, name) VALUES ... -->
+        <!-- 最稳妥的还是在 Service 层处理重复性 -->
+    </insert>
+
+    <select id="findByIds" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM tag
+        WHERE tag_id IN
+        <foreach collection="tagIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper> 

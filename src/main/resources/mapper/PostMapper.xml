@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rei.algo.mapper.PostMapper">
+
+    <!-- 基础 ResultMap -->
+    <resultMap id="BaseResultMap" type="com.rei.algo.model.entity.Post">
+        <id property="postId" column="post_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/> <!-- Explicit JDBC Type -->
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 包含作者和标签详情的 ResultMap -->
+    <resultMap id="PostWithDetailsResultMap" type="com.rei.algo.model.entity.Post" extends="BaseResultMap">
+        <!-- 关联作者信息 (一对一) -->
+        <association property="user" javaType="com.rei.algo.model.entity.User" resultMap="com.rei.algo.mapper.UserMapper.BaseResultMap" columnPrefix="u_"/>
+        <!-- 关联标签列表 (一对多/多对多) -->
+        <!-- 使用 select 嵌套查询获取标签列表 -->
+        <collection property="tags" javaType="java.util.List" ofType="com.rei.algo.model.entity.Tag"
+                    select="com.rei.algo.mapper.TagMapper.findTagsByPostId" column="post_id"/>
+        <!-- 或者使用 join 查询，需要更复杂的 resultMap 定义和 SQL -->
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        p.post_id, p.user_id, p.title, p.content, p.created_at, p.updated_at
+    </sql>
+
+     <sql id="User_Columns_Prefixed">
+        u.user_id as u_user_id, u.username as u_username, u.email as u_email, u.role as u_role, u.avatar_url as u_avatar_url, u.created_at as u_created_at
+    </sql>
+
+    <insert id="insert" parameterType="com.rei.algo.model.entity.Post">
+        INSERT INTO post (post_id, user_id, title, content, created_at, updated_at)
+        VALUES (#{postId}, #{userId}, #{title}, #{content, jdbcType=VARCHAR}, #{createdAt, jdbcType=TIMESTAMP}, #{updatedAt, jdbcType=TIMESTAMP})
+         <!-- 注意: content 存为 String，需要在 Service 层处理 JSON 序列化 -->
+         <!-- 如果数据库 content 是 JSON 类型, 可以用 jdbcType=OTHER, typeHandler=... -->
+    </insert>
+
+    <update id="update" parameterType="com.rei.algo.model.entity.Post">
+        UPDATE post
+        <set>
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="content != null">content = #{content, jdbcType=VARCHAR},</if> <!-- 同上 -->
+            updated_at = NOW(),
+        </set>
+        WHERE post_id = #{postId}
+        <!-- 可以添加 AND user_id = #{userId} 来确保用户只能修改自己的帖子 -->
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM post WHERE post_id = #{postId}
+        <!-- 关联的 post_tag 记录会因为外键约束 CASCADE DELETE 自动删除 -->
+        <!-- 关联的 comment 记录会因为外键约束 CASCADE DELETE 自动删除 -->
+    </delete>
+
+    <select id="findByIdWithDetails" resultMap="PostWithDetailsResultMap">
+        SELECT <include refid="Base_Column_List" />, 
+               <include refid="User_Columns_Prefixed" />
+        FROM post p
+        LEFT JOIN `user` u ON p.user_id = u.user_id
+        WHERE p.post_id = #{postId}
+    </select>
+
+     <select id="findById" resultMap="BaseResultMap">
+        SELECT post_id, user_id, title, content, created_at, updated_at
+        FROM post p <!-- Added alias for consistency -->
+        WHERE post_id = #{postId}
+    </select>
+
+    <!-- findByUserId, search, findAll 也可以考虑是否 join user 表获取作者信息 -->
+    <!-- 这里为了简单，先只查询 Post 基本信息 -->
+     <select id="findByUserId" resultMap="BaseResultMap">
+        SELECT post_id, user_id, title, content, created_at, updated_at
+        FROM post p
+        WHERE p.user_id = #{userId}
+        ORDER BY p.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+     <select id="countByUserId" resultType="long">
+        SELECT COUNT(*) FROM post WHERE user_id = #{userId}
+    </select>
+
+    <select id="search" resultMap="BaseResultMap">
+        SELECT post_id, user_id, title, content, created_at, updated_at
+        FROM post p
+        WHERE title LIKE CONCAT('%', #{keyword}, '%') 
+           OR JSON_UNQUOTE(JSON_EXTRACT(content, '$[*].children[*].text')) LIKE CONCAT('%', #{keyword}, '%') /* 假设 content 是 JSON 且需要搜索文本 */
+           /* JSON 搜索可能较慢，且语法依赖 MySQL 版本 */
+        ORDER BY updated_at DESC, created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+     <select id="countByKeyword" resultType="long">
+        SELECT COUNT(*) 
+        FROM post
+         WHERE title LIKE CONCAT('%', #{keyword}, '%') 
+           OR JSON_UNQUOTE(JSON_EXTRACT(content, '$[*].children[*].text')) LIKE CONCAT('%', #{keyword}, '%')
+    </select>
+
+     <select id="findAll" resultMap="BaseResultMap">
+        SELECT post_id, user_id, title, content, created_at, updated_at
+        FROM post p
+        ORDER BY p.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+     <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM post
+    </select>
+
+
+    <!--- Post-Tag Relationship - -->
+
+    <insert id="addTagsToPost">
+        INSERT INTO post_tag (post_id, tag_id) VALUES 
+        <foreach collection="tagIds" item="tagId" separator=",">
+            (#{postId}, #{tagId})
+        </foreach>
+        <!-- 可以考虑添加 INSERT IGNORE 防止重复插入 (如果主键已存在) -->
+    </insert>
+
+    <delete id="removeAllTagsFromPost">
+        DELETE FROM post_tag WHERE post_id = #{postId}
+    </delete>
+
+     <delete id="removeTagFromPost">
+        DELETE FROM post_tag WHERE post_id = #{postId} AND tag_id = #{tagId}
+    </delete>
+
+</mapper> 

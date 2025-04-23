@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rei.algo.mapper.UserMapper">
+
+    <!-- 基础 ResultMap -->
+    <resultMap id="BaseResultMap" type="com.rei.algo.model.entity.User">
+        <id property="userId" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="email" column="email"/>
+        <result property="role" column="role" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="avatarUrl" column="avatar_url"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <!-- 基础列定义，方便复用 -->
+    <sql id="Base_Column_List">
+        user_id, username, password, email, role, avatar_url, created_at
+    </sql>
+
+    <select id="findByUsername" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM `user`
+        WHERE username = #{username}
+    </select>
+
+    <select id="findByEmail" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM `user`
+        WHERE email = #{email}
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM `user`
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="existsByUsername" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM `user` WHERE username = #{username} LIMIT 1)
+    </select>
+
+    <select id="existsByEmail" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM `user` WHERE email = #{email} LIMIT 1)
+    </select>
+
+     <select id="existsById" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM `user` WHERE user_id = #{userId} LIMIT 1)
+    </select>
+
+    <insert id="insert" parameterType="com.rei.algo.model.entity.User">
+        INSERT INTO `user` (user_id, username, password, email, role, avatar_url, created_at)
+        VALUES (#{userId}, #{username}, #{password}, #{email}, #{role, typeHandler=org.apache.ibatis.type.EnumTypeHandler}, #{avatarUrl}, #{createdAt, jdbcType=TIMESTAMP})
+    </insert>
+
+    <update id="update" parameterType="com.rei.algo.model.entity.User">
+        UPDATE `user`
+        <set>
+            <if test="username != null and username != ''">username = #{username},</if>
+            <if test="password != null and password != ''">password = #{password},</if>
+            <if test="email != null and email != ''">email = #{email},</if>
+            <if test="role != null">role = #{role, typeHandler=org.apache.ibatis.type.EnumTypeHandler},</if>
+            <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
+            <!-- createdAt 通常不在此处更新 -->
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM `user` WHERE user_id = #{userId}
+    </delete>
+
+</mapper> 

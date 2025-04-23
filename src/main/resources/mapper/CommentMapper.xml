@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rei.algo.mapper.CommentMapper">
+
+    <!-- 基础 ResultMap -->
+    <resultMap id="BaseResultMap" type="com.rei.algo.model.entity.Comment">
+        <id property="commentId" column="comment_id"/>
+        <result property="postId" column="post_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="parentCommentId" column="parent_comment_id"/>
+        <result property="content" column="content"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <!-- 包含作者信息的 ResultMap -->
+    <resultMap id="CommentWithUserResultMap" type="com.rei.algo.model.entity.Comment" extends="BaseResultMap">
+        <association property="user" javaType="com.rei.algo.model.entity.User" resultMap="com.rei.algo.mapper.UserMapper.BaseResultMap" columnPrefix="u_"/>
+        <!-- replies 列表通常不在 Mapper XML 中直接递归加载，建议在 Service 层处理 -->
+        <!-- 如果确实需要，可以使用嵌套 select，但要注意 N+1 问题 -->
+        <!-- <collection property="replies" javaType="java.util.List" ofType="com.rei.algo.model.entity.Comment"
+                    select="findRepliesByParentId" column="comment_id"/> -->
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        c.comment_id, c.post_id, c.user_id, c.parent_comment_id, c.content, c.created_at
+    </sql>
+
+    <sql id="User_Columns_Prefixed">
+        u.user_id as u_user_id, u.username as u_username, u.email as u_email, u.role as u_role, u.avatar_url as u_avatar_url, u.created_at as u_created_at
+    </sql>
+
+    <insert id="insert" parameterType="com.rei.algo.model.entity.Comment">
+        INSERT INTO comment (comment_id, post_id, user_id, parent_comment_id, content, created_at)
+        VALUES (#{commentId}, #{postId}, #{userId}, #{parentCommentId}, #{content}, #{createdAt, jdbcType=TIMESTAMP})
+    </insert>
+
+    <update id="updateContent" parameterType="com.rei.algo.model.entity.Comment">
+        UPDATE comment
+        SET content = #{content}
+        WHERE comment_id = #{commentId}
+        <!-- 可能需要添加 user_id = #{userId} 限制，防止修改他人评论 -->
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM comment WHERE comment_id = #{commentId}
+        <!-- 子评论会因为外键约束 CASCADE DELETE 自动删除 -->
+    </delete>
+
+    <select id="findByIdWithUser" resultMap="CommentWithUserResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               <include refid="User_Columns_Prefixed"/>
+        FROM comment c
+        LEFT JOIN `user` u ON c.user_id = u.user_id
+        WHERE c.comment_id = #{commentId}
+    </select>
+
+    <select id="findTopLevelByPostId" resultMap="CommentWithUserResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               <include refid="User_Columns_Prefixed"/>
+        FROM comment c
+        LEFT JOIN `user` u ON c.user_id = u.user_id
+        WHERE c.post_id = #{postId} AND c.parent_comment_id IS NULL
+        ORDER BY c.created_at ASC <!-- 或者 DESC -->
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+     <select id="countTopLevelByPostId" resultType="long">
+        SELECT COUNT(*)
+        FROM comment
+        WHERE post_id = #{postId} AND parent_comment_id IS NULL
+    </select>
+
+    <select id="findRepliesByParentId" resultMap="CommentWithUserResultMap">
+         SELECT <include refid="Base_Column_List"/>,
+               <include refid="User_Columns_Prefixed"/>
+        FROM comment c
+        LEFT JOIN `user` u ON c.user_id = u.user_id
+        WHERE c.parent_comment_id = #{parentCommentId}
+        ORDER BY c.created_at ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countRepliesByParentId" resultType="long">
+        SELECT COUNT(*)
+        FROM comment
+        WHERE parent_comment_id = #{parentCommentId}
+    </select>
+
+    <!-- findByUserId 可能需要关联 Post 信息摘要 -->
+    <select id="findByUserId" resultMap="CommentWithUserResultMap">
+         SELECT <include refid="Base_Column_List"/>,
+               <include refid="User_Columns_Prefixed"/>
+               <!-- , p.title as post_title (需要 join post p) -->
+        FROM comment c
+        LEFT JOIN `user` u ON c.user_id = u.user_id
+        WHERE c.user_id = #{userId}
+        ORDER BY c.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+     <select id="countByUserId" resultType="long">
+        SELECT COUNT(*)
+        FROM comment
+        WHERE user_id = #{userId}
+    </select>
+
+</mapper> 
