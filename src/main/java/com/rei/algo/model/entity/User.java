@@ -1,6 +1,6 @@
 package com.rei.algo.model.entity;
 
-import com.rei.algo.DTO.UserDTO;
+import com.rei.algo.DTO.user.UserDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

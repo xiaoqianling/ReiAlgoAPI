@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rei.algo.mapper.DocsMapper">
+
+    <resultMap id="BaseResultMap" type="com.rei.algo.model.entity.Docs">
+        <id property="id" column="docs_id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT *
+        FROM docs
+        WHERE docs.docs_id = #{id}
+    </select>
+
+</mapper> 

@@ -1,4 +1,4 @@
-package com.rei.algo.DTO;
+package com.rei.algo.DTO.user;
 
 import jakarta.validation.constraints.Email;
 // Potentially add URL validation if avatarUrl needs stricter validation

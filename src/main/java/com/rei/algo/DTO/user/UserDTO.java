@@ -1,4 +1,4 @@
-package com.rei.algo.DTO;
+package com.rei.algo.DTO.user;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

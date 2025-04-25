@@ -1,6 +1,6 @@
 package com.rei.algo.service;
 
-import com.rei.algo.DTO.AlgorithmDTO;
+import com.rei.algo.DTO.algorithm.AlgorithmDTO;
 import com.rei.algo.DTO.PageDTO;
 
 import java.util.Optional;

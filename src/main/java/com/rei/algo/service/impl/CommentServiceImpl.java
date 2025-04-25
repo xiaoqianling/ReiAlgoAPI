@@ -1,8 +1,8 @@
 package com.rei.algo.service.impl;
 
-import com.rei.algo.DTO.CommentDTO;
+import com.rei.algo.DTO.comment.CommentDTO;
 import com.rei.algo.DTO.PageDTO;
-import com.rei.algo.DTO.UserDTO;
+import com.rei.algo.DTO.user.UserDTO;
 import com.rei.algo.mapper.CommentMapper;
 import com.rei.algo.mapper.PostMapper; // Check if post exists
 import com.rei.algo.mapper.UserMapper; // Get user info

@@ -1,9 +1,9 @@
 package com.rei.algo.service;
 
 import com.rei.algo.DTO.PageDTO;
-import com.rei.algo.DTO.PostCreateRequestDTO;
-import com.rei.algo.DTO.PostDTO;
-import com.rei.algo.DTO.PostUpdateRequestDTO;
+import com.rei.algo.DTO.post.PostCreateRequestDTO;
+import com.rei.algo.DTO.post.PostDTO;
+import com.rei.algo.DTO.post.PostUpdateRequestDTO;
 
 import java.util.Optional;
 

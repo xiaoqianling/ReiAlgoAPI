@@ -1,9 +1,9 @@
 package com.rei.algo.controller;
 
-import com.rei.algo.DTO.LoginRequestDTO;
-import com.rei.algo.DTO.LoginResponseDTO;
-import com.rei.algo.DTO.UserDTO;
-import com.rei.algo.DTO.RegisterRequestDTO;
+import com.rei.algo.DTO.auth.LoginRequestDTO;
+import com.rei.algo.DTO.auth.LoginResponseDTO;
+import com.rei.algo.DTO.user.UserDTO;
+import com.rei.algo.DTO.auth.RegisterRequestDTO;
 import com.rei.algo.security.JwtTokenProvider;
 import com.rei.algo.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;

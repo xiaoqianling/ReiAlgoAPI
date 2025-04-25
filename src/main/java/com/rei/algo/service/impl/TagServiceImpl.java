@@ -1,6 +1,5 @@
 package com.rei.algo.service.impl;
 
-import com.rei.algo.DTO.TagDTO;
 import com.rei.algo.mapper.TagMapper;
 import com.rei.algo.model.entity.Tag;
 import com.rei.algo.service.TagService;
@@ -28,11 +27,11 @@ public class TagServiceImpl implements TagService {
 
     @Override
     @Transactional
-    public TagDTO createTag(TagDTO tagDTO) {
-        Assert.notNull(tagDTO, "Tag DTO cannot be null");
-        Assert.hasText(tagDTO.getName(), "Tag name cannot be empty");
+    public Tag createTag(Tag Tag) {
+        Assert.notNull(Tag, "Tag DTO cannot be null");
+        Assert.hasText(Tag.getName(), "Tag name cannot be empty");
 
-        String tagName = tagDTO.getName().trim();
+        String tagName = Tag.getName().trim();
 
         // Find or create the tag
         Tag tag = findOrCreateTagByName(tagName);
@@ -121,7 +120,7 @@ public class TagServiceImpl implements TagService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TagDTO> getAllTags() {
+    public List<Tag> getAllTags() {
         return tagMapper.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -129,7 +128,7 @@ public class TagServiceImpl implements TagService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TagDTO> getTagsByPostId(String postId) {
+    public List<Tag> getTagsByPostId(String postId) {
         Assert.hasText(postId, "Post ID cannot be empty");
         return tagMapper.findTagsByPostId(postId).stream()
                 .map(this::convertToDTO)
@@ -138,12 +137,12 @@ public class TagServiceImpl implements TagService {
 
     // --- Helper Methods --- //
 
-    private TagDTO convertToDTO(Tag tag) {
+    private Tag convertToDTO(Tag tag) {
         if (tag == null) return null;
-        TagDTO dto = new TagDTO();
+        Tag dto = new Tag();
         BeanUtils.copyProperties(tag, dto);
         return dto;
     }
 
-    // private Tag convertToEntity(TagDTO dto) { ... }
+    // private Tag convertToEntity(Tag dto) { ... }
 } 

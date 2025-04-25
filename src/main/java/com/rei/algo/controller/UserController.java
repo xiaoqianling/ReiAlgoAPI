@@ -1,8 +1,8 @@
 package com.rei.algo.controller;
 
 import com.rei.algo.DTO.PageDTO;
-import com.rei.algo.DTO.UserDTO;
-import com.rei.algo.DTO.UserProfileUpdateDTO;
+import com.rei.algo.DTO.user.UserDTO;
+import com.rei.algo.DTO.user.UserProfileUpdateDTO;
 import com.rei.algo.security.SecurityUtils;
 import com.rei.algo.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,11 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.Optional;
 
 @Tag(name = "Users", description = "用户管理相关 API")
 @RestController

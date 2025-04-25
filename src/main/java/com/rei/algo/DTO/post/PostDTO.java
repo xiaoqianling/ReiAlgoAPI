@@ -1,6 +1,8 @@
-package com.rei.algo.DTO;
+package com.rei.algo.DTO.post;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.rei.algo.DTO.user.UserDTO;
+import com.rei.algo.model.entity.Tag;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -41,7 +43,7 @@ public class PostDTO {
 
     // For returning details
     private UserDTO user; // Author details
-    private List<TagDTO> tags; // Associated tags with details
+    private List<Tag> tags; // Associated tags with details
 
     // Could add comment count etc.
     // private Integer commentCount;

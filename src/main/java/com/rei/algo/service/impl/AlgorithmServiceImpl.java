@@ -1,12 +1,11 @@
 package com.rei.algo.service.impl;
 
-import com.rei.algo.DTO.AlgorithmDTO;
+import com.rei.algo.DTO.algorithm.AlgorithmDTO;
 import com.rei.algo.DTO.PageDTO;
-import com.rei.algo.DTO.UserDTO;
+import com.rei.algo.DTO.user.UserDTO;
 import com.rei.algo.mapper.AlgorithmMapper;
 import com.rei.algo.mapper.UserMapper; // 用于获取用户信息
 import com.rei.algo.model.entity.Algorithm;
-import com.rei.algo.model.entity.User;
 import com.rei.algo.service.AlgorithmService;
 import com.rei.algo.util.IDGenerator;
 import lombok.RequiredArgsConstructor;

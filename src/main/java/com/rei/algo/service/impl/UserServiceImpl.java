@@ -1,15 +1,14 @@
 package com.rei.algo.service.impl;
 
-import com.rei.algo.DTO.UserDTO;
-import com.rei.algo.DTO.RegisterRequestDTO;
-import com.rei.algo.DTO.UserProfileUpdateDTO;
+import com.rei.algo.DTO.user.UserDTO;
+import com.rei.algo.DTO.auth.RegisterRequestDTO;
+import com.rei.algo.DTO.user.UserProfileUpdateDTO;
 import com.rei.algo.exception.ResourceNotFoundException;
 import com.rei.algo.mapper.UserMapper;
 import com.rei.algo.model.entity.Role;
 import com.rei.algo.model.entity.User;
 import com.rei.algo.service.UserService;
 import com.rei.algo.util.IDGenerator; // Assuming class name is IDGenerator based on previous edit
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;

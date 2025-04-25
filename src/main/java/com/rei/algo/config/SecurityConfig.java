@@ -87,6 +87,7 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/algorithms/public").permitAll() // 允许获取公开算法列表
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/algorithms/search").permitAll() // 允许搜索公开算法
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/algorithms/{algoId}").permitAll() // 允许获取单个算法(Service层处理私有)
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/docs/**").permitAll() // 允许获取文档
 
                         // 允许 OPTIONS 预检请求
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS).permitAll()

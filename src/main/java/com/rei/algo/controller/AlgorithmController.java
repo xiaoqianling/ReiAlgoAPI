@@ -1,6 +1,6 @@
 package com.rei.algo.controller;
 
-import com.rei.algo.DTO.AlgorithmDTO;
+import com.rei.algo.DTO.algorithm.AlgorithmDTO;
 import com.rei.algo.DTO.PageDTO;
 import com.rei.algo.security.SecurityUtils;
 import com.rei.algo.service.AlgorithmService;

@@ -3,6 +3,10 @@ package com.rei.algo.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper; // For JSON handling
 import com.rei.algo.DTO.*;
+import com.rei.algo.DTO.post.PostCreateRequestDTO;
+import com.rei.algo.DTO.post.PostDTO;
+import com.rei.algo.DTO.post.PostUpdateRequestDTO;
+import com.rei.algo.DTO.user.UserDTO;
 import com.rei.algo.mapper.PostMapper;
 import com.rei.algo.mapper.UserMapper;
 import com.rei.algo.model.entity.Post;
@@ -22,7 +26,6 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -258,7 +261,7 @@ public class PostServiceImpl implements PostService {
     }
 
 
-    // Converts Post entity to DTO, including nested UserDTO and List<TagDTO>
+    // Converts Post entity to DTO, including nested UserDTO and List<Tag>
     private PostDTO convertEntityToDTOWithDetails(Post post) {
         if (post == null) return null;
         PostDTO dto = new PostDTO();
@@ -277,11 +280,11 @@ public class PostServiceImpl implements PostService {
             dto.setUser(userDTO);
         }
 
-        // Handle Tags (List<Tag> entity -> List<TagDTO>)
+        // Handle Tags (List<Tag> entity -> List<Tag>)
         // Assumes tags are loaded by the findByIdWithDetails query (via nested select)
         if (!CollectionUtils.isEmpty(post.getTags())) {
             dto.setTags(post.getTags().stream()
-                    .map(tag -> TagDTO.builder().tagId(tag.getTagId()).name(tag.getName()).build())
+                    .map(tag -> Tag.builder().tagId(tag.getTagId()).name(tag.getName()).build())
                     .collect(Collectors.toList()));
         } else {
              dto.setTags(Collections.emptyList());

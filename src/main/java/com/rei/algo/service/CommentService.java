@@ -1,6 +1,6 @@
 package com.rei.algo.service;
 
-import com.rei.algo.DTO.CommentDTO;
+import com.rei.algo.DTO.comment.CommentDTO;
 import com.rei.algo.DTO.PageDTO;
 
 import java.util.Optional;

@@ -1,6 +1,5 @@
 package com.rei.algo.service;
 
-import com.rei.algo.DTO.TagDTO;
 import com.rei.algo.model.entity.Tag;
 
 import java.util.List;
@@ -14,10 +13,10 @@ public interface TagService {
     /**
      * 创建新标签 (如果不存在)。
      * 公开接口，返回 DTO。
-     * @param tagDTO 标签 DTO (只需要 name)
+     * @param Tag 标签 DTO (只需要 name)
      * @return 创建或已存在的标签 DTO
      */
-    TagDTO createTag(TagDTO tagDTO);
+    Tag createTag(Tag Tag);
 
     /**
      * 根据名称查找或创建标签实体。
@@ -42,14 +41,14 @@ public interface TagService {
      * 获取所有标签
      * @return 标签 DTO 列表
      */
-    List<TagDTO> getAllTags();
+    List<Tag> getAllTags();
 
     /**
      * 根据帖子 ID 获取标签列表
      * @param postId 帖子 ID
      * @return 标签 DTO 列表
      */
-    List<TagDTO> getTagsByPostId(String postId);
+    List<Tag> getTagsByPostId(String postId);
 
 
     // 可选的管理员操作:

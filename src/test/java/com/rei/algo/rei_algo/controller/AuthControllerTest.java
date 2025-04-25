@@ -1,9 +1,9 @@
 package com.rei.algo.rei_algo.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rei.algo.DTO.LoginRequestDTO;
-import com.rei.algo.DTO.RegisterRequestDTO;
-import com.rei.algo.DTO.UserDTO;
+import com.rei.algo.DTO.auth.LoginRequestDTO;
+import com.rei.algo.DTO.auth.RegisterRequestDTO;
+import com.rei.algo.DTO.user.UserDTO;
 import com.rei.algo.controller.AuthController;
 import com.rei.algo.security.JwtTokenProvider;
 import com.rei.algo.service.UserService;
@@ -20,9 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;

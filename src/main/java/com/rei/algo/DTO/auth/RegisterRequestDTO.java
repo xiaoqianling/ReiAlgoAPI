@@ -1,4 +1,4 @@
-package com.rei.algo.DTO;
+package com.rei.algo.DTO.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

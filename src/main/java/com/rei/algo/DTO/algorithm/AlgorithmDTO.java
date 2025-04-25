@@ -1,6 +1,7 @@
-package com.rei.algo.DTO;
+package com.rei.algo.DTO.algorithm;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.rei.algo.DTO.user.UserDTO;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

@@ -1,9 +1,9 @@
 package com.rei.algo.service;
 
 import com.rei.algo.model.entity.User;
-import com.rei.algo.DTO.UserDTO;
-import com.rei.algo.DTO.RegisterRequestDTO;
-import com.rei.algo.DTO.UserProfileUpdateDTO;
+import com.rei.algo.DTO.user.UserDTO;
+import com.rei.algo.DTO.auth.RegisterRequestDTO;
+import com.rei.algo.DTO.user.UserProfileUpdateDTO;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.Optional;

@@ -1,6 +1,7 @@
-package com.rei.algo.DTO;
+package com.rei.algo.DTO.comment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.rei.algo.DTO.user.UserDTO;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

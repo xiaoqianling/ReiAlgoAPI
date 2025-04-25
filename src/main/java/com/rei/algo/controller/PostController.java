@@ -1,9 +1,9 @@
 package com.rei.algo.controller;
 
-import com.rei.algo.DTO.PostCreateRequestDTO;
-import com.rei.algo.DTO.PostUpdateRequestDTO;
+import com.rei.algo.DTO.post.PostCreateRequestDTO;
+import com.rei.algo.DTO.post.PostUpdateRequestDTO;
 import com.rei.algo.DTO.PageDTO;
-import com.rei.algo.DTO.PostDTO;
+import com.rei.algo.DTO.post.PostDTO;
 import com.rei.algo.security.SecurityUtils;
 import com.rei.algo.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
