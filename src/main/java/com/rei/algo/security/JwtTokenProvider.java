@@ -19,10 +19,10 @@ import java.util.Date;
 @Slf4j
 public class JwtTokenProvider {
 
-    @Value("${app.jwt.secret}") // 从 application.yml 读取密钥
+    @Value("${jwt.secret}") // 从 application.yml 读取密钥
     private String jwtSecretString;
 
-    @Value("${app.jwt.expiration-ms}") // 从 application.yml 读取有效期
+    @Value("${jwt.expiration-ms}") // 从 application.yml 读取有效期
     private int jwtExpirationInMs;
 
     private SecretKey secretKey;
@@ -42,7 +42,7 @@ public class JwtTokenProvider {
         }
 
         if (jwtExpirationInMs <= 0) {
-            log.warn("JWT expiration time (app.jwt.expiration-ms) is not configured or invalid. Using default: 1 hour.");
+            log.warn("JWT expiration time (jwt.expiration-ms) is not configured or invalid. Using default: 1 hour.");
             this.jwtExpirationInMs = 3600000; // Default to 1 hour
         }
     }

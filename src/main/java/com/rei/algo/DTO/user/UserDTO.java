@@ -49,6 +49,7 @@ public class UserDTO {
 
     // Email is optional but must be valid if provided
     @Email(message = "邮箱格式不正确")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String email; // Removed @NotBlank
 
     // Avatar URL can be updated, but not required for registration

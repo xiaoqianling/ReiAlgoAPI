@@ -8,12 +8,12 @@ INSERT INTO `user` (`user_id`, `username`, `password`, `email`, `role`, `avatar_
 -- 添加普通用户 (密码: password123)
 -- 注意: user_id '87654321' 和 password_hash 需要替换为实际生成的值
 INSERT INTO `user` (`user_id`, `username`, `password`, `email`, `role`, `avatar_url`, `created_at`) VALUES
-('87654321', 'testuser', '$2a$10$placeholderhash.user.password123', 'test@example.com', 'USER', 'https://example.com/avatar.png', NOW());
+('87654321', 'testuser', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'test@example.com', 'USER', 'https://example.com/avatar.png', NOW());
 
 -- 添加更多普通用户 (密码: password)
 INSERT INTO `user` (`user_id`, `username`, `password`, `email`, `role`, `avatar_url`, `created_at`) VALUES
-('10000002', 'alice', '$2a$10$placeholderhash.alice.password', 'alice@sample.net', 'USER', NULL, NOW()),
-('10000003', 'bob', '$2a$10$placeholderhash.bob.password', 'bob@sample.org', 'USER', 'https://sample.org/bob_avatar.jpg', NOW());
+('10000002', 'alice', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'alice@sample.net', 'USER', NULL, NOW()),
+('10000003', 'bob', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'bob@sample.org', 'USER', 'https://sample.org/bob_avatar.jpg', NOW());
 
 -- 添加一些标签
 -- 注意: tag_id 需要替换为实际生成的值

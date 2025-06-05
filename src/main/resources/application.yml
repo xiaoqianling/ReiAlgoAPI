@@ -65,11 +65,8 @@ management:
       show-details: when_authorized
 
 # JWT Configuration
-app:
-  jwt:
-    # !!! 重要：请立即替换为强随机生成的密钥 (至少32字节) !!!
-    # !!! 例如，运行: openssl rand -base64 32                !!!
-    # !!! 不要使用下面的占位符或简单字符串！                !!!
-    secret: "PLACEHOLDER_replace_with_your_very_strong_secure_32_byte_plus_secret_key_here"
-    # 令牌有效期 (毫秒)，例如 3600000 = 1 小时, 86400000 = 1 天
-    expiration-ms: 3600000
+jwt:
+  # 使用一个强随机生成的密钥（至少32字节）
+  secret: "8Zz5tw0Ionm3XPZZfN0NOml3z9FMfmpgXwovR9fp6ryDIoGRM8EPHAB6iHsc0fb"
+  # 令牌有效期（毫秒），例如 3600000 = 1 小时, 86400000 = 1 天
+  expiration-ms: 86400000

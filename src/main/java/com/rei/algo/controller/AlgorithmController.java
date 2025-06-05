@@ -4,6 +4,7 @@ import com.rei.algo.DTO.algorithm.AlgorithmDTO;
 import com.rei.algo.DTO.PageDTO;
 import com.rei.algo.security.SecurityUtils;
 import com.rei.algo.service.AlgorithmService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/algorithms")
 @RequiredArgsConstructor
+@Tag(name = "Algorithm", description = "算法信息管理 API")
 public class AlgorithmController {
 
     private final AlgorithmService algorithmService;

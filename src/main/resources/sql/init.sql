@@ -53,7 +53,6 @@ CREATE TABLE IF NOT EXISTS `post_evaluation` (
     `user_id` VARCHAR(8) NOT NULL COMMENT '用户ID',
     `evaluation_type` ENUM('LIKE', 'DISLIKE') NOT NULL COMMENT '评价类型',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '评价时间',
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`post_id`, `user_id`), -- 每个用户对每个帖子只能有一个评价
     INDEX `idx_pe_user_id` (`user_id`),
     FOREIGN KEY (`post_id`) REFERENCES `post`(`post_id`) ON DELETE CASCADE,

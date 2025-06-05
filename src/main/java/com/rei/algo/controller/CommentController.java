@@ -89,7 +89,7 @@ public class CommentController {
     @ApiResponse(responseCode = "403", description = "无权限更新此评论")
     @ApiResponse(responseCode = "404", description = "要更新的评论未找到")
     @PutMapping("/{commentId}/content")
-    @PreAuthorize("isAuthenticated()") // Delegate detailed auth check to service
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CommentDTO> updateCommentContent(
             @Parameter(description = "要更新的评论ID") @PathVariable String commentId,
             @Valid @RequestBody UpdateCommentRequest request) {

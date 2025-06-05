@@ -5,17 +5,21 @@ import com.fasterxml.jackson.databind.ObjectMapper; // For JSON handling
 import com.rei.algo.DTO.*;
 import com.rei.algo.DTO.post.PostCreateRequestDTO;
 import com.rei.algo.DTO.post.PostDTO;
+import com.rei.algo.DTO.post.PostSummaryDTO;
 import com.rei.algo.DTO.post.PostUpdateRequestDTO;
 import com.rei.algo.DTO.user.UserDTO;
 import com.rei.algo.mapper.PostMapper;
 import com.rei.algo.mapper.UserMapper;
 import com.rei.algo.model.entity.Post;
+import com.rei.algo.model.entity.PostEvaluation;
 import com.rei.algo.model.entity.Tag;
+import com.rei.algo.model.enums.EvaluationType;
 import com.rei.algo.service.PostService;
 import com.rei.algo.service.TagService;
 import com.rei.algo.util.IDGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -172,57 +176,47 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageDTO<PostDTO> getPostsByUserId(String userId, int pageNum, int pageSize) {
+    public PageDTO<PostSummaryDTO> getPostsByUserId(String userId, int pageNum, int pageSize) {
         Assert.hasText(userId, "User ID cannot be empty");
         validatePageParams(pageNum, pageSize);
         int offset = (pageNum - 1) * pageSize;
+        RowBounds rowBounds = new RowBounds(offset, pageSize);
 
         long total = postMapper.countByUserId(userId);
-        // Consider joining User info here if needed for list view
-        List<Post> posts = postMapper.findByUserId(userId, offset, pageSize);
+        List<PostSummaryDTO> dtos = postMapper.findByUserId(userId, rowBounds);
 
-        List<PostDTO> dtos = posts.stream()
-                                .map(this::convertEntityToDTOWithUser) // Convert with basic user info
-                                .collect(Collectors.toList());
-        long totalPages = (total + pageSize - 1) / pageSize;
+        long totalPages = (total == 0) ? 0 : (total + pageSize - 1) / pageSize;
 
         return new PageDTO<>(pageNum, pageSize, total, (int)totalPages, dtos);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageDTO<PostDTO> searchPosts(String keyword, int pageNum, int pageSize) {
+    public PageDTO<PostSummaryDTO> searchPosts(String keyword, int pageNum, int pageSize) {
         validatePageParams(pageNum, pageSize);
         int offset = (pageNum - 1) * pageSize;
+        RowBounds rowBounds = new RowBounds(offset, pageSize);
         String searchKeyword = StringUtils.hasText(keyword) ? keyword.trim() : null;
 
-        // This count might be slow due to JSON search
         long total = postMapper.countByKeyword(searchKeyword);
-        // Consider joining User info here
-        List<Post> posts = postMapper.search(searchKeyword, offset, pageSize);
+        List<PostSummaryDTO> dtos = postMapper.search(searchKeyword, rowBounds);
 
-        List<PostDTO> dtos = posts.stream()
-                                .map(this::convertEntityToDTOWithUser) // Convert with basic user info
-                                .collect(Collectors.toList());
-        long totalPages = (total + pageSize - 1) / pageSize;
+        long totalPages = (total == 0) ? 0 : (total + pageSize - 1) / pageSize;
 
         return new PageDTO<>(pageNum, pageSize, total, (int)totalPages, dtos);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageDTO<PostDTO> listAllPosts(int pageNum, int pageSize) {
+    public PageDTO<PostSummaryDTO> listAllPosts(int pageNum, int pageSize) {
         validatePageParams(pageNum, pageSize);
         int offset = (pageNum - 1) * pageSize;
+        RowBounds rowBounds = new RowBounds(offset, pageSize);
 
-        long total = postMapper.countAll();
-         // Consider joining User info here
-        List<Post> posts = postMapper.findAll(offset, pageSize);
+        long total = postMapper.countPosts();
+        List<PostSummaryDTO> dtos = postMapper.findAll(rowBounds);
 
-        List<PostDTO> dtos = posts.stream()
-                                .map(this::convertEntityToDTOWithUser) // Convert with basic user info
-                                .collect(Collectors.toList());
-        long totalPages = (total + pageSize - 1) / pageSize;
+        long totalPages = (total == 0) ? 0 : (total + pageSize - 1) / pageSize;
 
         return new PageDTO<>(pageNum, pageSize, total, (int)totalPages, dtos);
     }
@@ -294,41 +288,72 @@ public class PostServiceImpl implements PostService {
         return dto;
     }
 
-     // Converts Post entity to DTO, including only basic User info (for lists)
-    private PostDTO convertEntityToDTOWithUser(Post post) {
-        if (post == null) return null;
-        PostDTO dto = new PostDTO();
-        BeanUtils.copyProperties(post, dto, "content", "tags", "user", "tagNames");
+    // --- New/Missing Method Implementations --- //
 
-        // Handle Content
-        dto.setContent(convertJsonToContent(post.getContent()));
-
-         // Fetch and Handle User (if not already joined)
-        if (post.getUser() == null && post.getUserId() != null) {
-            userMapper.findById(post.getUserId()).ifPresent(user -> {
-                UserDTO userDTO = UserDTO.builder()
-                                        .userId(user.getUserId())
-                                        .username(user.getUsername())
-                                        .avatarUrl(user.getAvatarUrl())
-                                        .build();
-                dto.setUser(userDTO);
-            });
-        } else if (post.getUser() != null) {
-             UserDTO userDTO = UserDTO.builder()
-                    .userId(post.getUser().getUserId())
-                    .username(post.getUser().getUsername())
-                    .avatarUrl(post.getUser().getAvatarUrl())
-                    .build();
-            dto.setUser(userDTO);
-        }
-
-
-        // Tags usually not needed in list view, set to null or empty
-         dto.setTags(null); // Or fetch if needed: tagService.getTagsByPostId(post.getPostId())
-
-        return dto;
+    @Override
+    @Transactional(readOnly = true)
+    public PageDTO<PostSummaryDTO> getPostSummaries(int pageNum, int pageSize) {
+        // This method seems redundant with listAllPosts, let's delegate to it.
+        log.debug("Delegating getPostSummaries to listAllPosts with pageNum: {}, pageSize: {}", pageNum, pageSize);
+        return listAllPosts(pageNum, pageSize);
     }
 
+    @Override
+    @Transactional
+    public void incrementView(String postId) {
+        Assert.hasText(postId, "Post ID cannot be empty");
+        // Check if post exists first (optional, but good practice)
+        postMapper.findById(postId).orElseThrow(() -> new RuntimeException("Post not found with ID: " + postId));
+        int updatedRows = postMapper.incrementViewCount(postId);
+        if (updatedRows == 0) {
+             // This might happen in a race condition if the post was deleted just before the update
+             log.warn("Failed to increment view count for post ID: {}, possibly deleted.", postId);
+             // Optionally re-throw or handle differently
+        }
+    }
+
+    @Override
+    @Transactional
+    public void evaluatePost(String postId, String userId, EvaluationType evaluationType) {
+        Assert.hasText(postId, "Post ID cannot be empty");
+        Assert.hasText(userId, "User ID cannot be empty");
+        Assert.notNull(evaluationType, "Evaluation type cannot be null");
+
+        // 1. Check if post exists
+        postMapper.findById(postId).orElseThrow(() -> new RuntimeException("Post not found with ID: " + postId));
+
+        // 2. Check existing evaluation
+        PostEvaluation existingEvaluation = postMapper.findEvaluation(postId, userId);
+
+        if (existingEvaluation != null) {
+            // User has already evaluated this post
+            if (existingEvaluation.getEvaluationType() == evaluationType) {
+                // Same evaluation type - Could implement toggle (delete) or just do nothing.
+                // Let's do nothing for now.
+                 log.debug("User {} already evaluated post {} with type {}, no change.", userId, postId, evaluationType);
+                 // Optionally: Delete evaluation (toggle off)
+                 // postMapper.deleteEvaluation(postId, userId); // Need to add this method to mapper
+            } else {
+                // Different evaluation type - Update the existing evaluation
+                 log.debug("Updating evaluation for user {} on post {} from {} to {}.", userId, postId, existingEvaluation.getEvaluationType(), evaluationType);
+                existingEvaluation.setEvaluationType(evaluationType);
+                 // Updated_at is set by DB trigger or mapper XML
+                postMapper.updateEvaluation(existingEvaluation);
+            }
+        } else {
+            // New evaluation - Insert
+            log.debug("Inserting new evaluation for user {} on post {} with type {}.", userId, postId, evaluationType);
+            PostEvaluation newEvaluation = new PostEvaluation();
+            newEvaluation.setPostId(postId);
+            newEvaluation.setUserId(userId);
+            newEvaluation.setEvaluationType(evaluationType);
+            // createdAt and updatedAt are set by DB/mapper
+            postMapper.insertEvaluation(newEvaluation);
+        }
+    }
+
+    // Removed convertEntityToDTOWithUser as it's no longer used
+    // private PostDTO convertEntityToDTOWithUser(Post post) { ... }
 
     // private Post convertDTOToEntity(PostDTO dto) { ... } // Might be needed
 } 

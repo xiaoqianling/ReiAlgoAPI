@@ -10,6 +10,7 @@
         <result property="userId" column="user_id"/>
         <result property="title" column="title"/>
         <result property="content" column="content" jdbcType="VARCHAR"/> <!-- Explicit JDBC Type -->
+        <result property="views" column="views"/> <!-- 添加 views -->
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
@@ -25,17 +26,48 @@
         <!-- 或者使用 join 查询，需要更复杂的 resultMap 定义和 SQL -->
     </resultMap>
 
+    <!-- PostSummaryResultMap (用于列表查询) -->
+    <resultMap id="PostSummaryResultMap" type="com.rei.algo.DTO.post.PostSummaryDTO">
+        <id property="postId" column="post_id"/>
+        <result property="title" column="title"/>
+        <result property="views" column="views"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="summary" column="content_summary"/>
+        <result property="likes" column="likes_count"/>
+        <result property="dislikes" column="dislikes_count"/>
+        <result property="commentCount" column="comment_count"/>
+        <!-- 嵌套作者信息 -->
+        <association property="author" javaType="com.rei.algo.DTO.user.UserSummaryDTO">
+            <id property="userId" column="author_id"/>
+            <result property="username" column="author_username"/>
+            <result property="avatarUrl" column="author_avatar_url"/>
+        </association>
+        <!-- 嵌套标签列表 -->
+        <collection property="tags" javaType="java.util.List" ofType="com.rei.algo.model.entity.Tag"
+                    select="com.rei.algo.mapper.TagMapper.findTagsByPostId" column="post_id"/>
+    </resultMap>
+
     <sql id="Base_Column_List">
-        p.post_id, p.user_id, p.title, p.content, p.created_at, p.updated_at
+        p.post_id, p.user_id, p.title, p.content, p.views, p.created_at, p.updated_at
     </sql>
 
      <sql id="User_Columns_Prefixed">
         u.user_id as u_user_id, u.username as u_username, u.email as u_email, u.role as u_role, u.avatar_url as u_avatar_url, u.created_at as u_created_at
     </sql>
 
+    <sql id="Summary_Columns">
+        p.post_id, p.title, p.views, p.created_at, p.updated_at,
+        LEFT(p.content, 80) AS content_summary,
+        u.user_id AS author_id, u.username AS author_username, u.avatar_url AS author_avatar_url,
+        (SELECT COUNT(*) FROM `comment` c WHERE c.post_id = p.post_id) AS comment_count,
+        (SELECT COUNT(*) FROM post_evaluation pe WHERE pe.post_id = p.post_id AND pe.evaluation_type = 'LIKE') AS likes_count,
+        (SELECT COUNT(*) FROM post_evaluation pe WHERE pe.post_id = p.post_id AND pe.evaluation_type = 'DISLIKE') AS dislikes_count
+    </sql>
+
     <insert id="insert" parameterType="com.rei.algo.model.entity.Post">
-        INSERT INTO post (post_id, user_id, title, content, created_at, updated_at)
-        VALUES (#{postId}, #{userId}, #{title}, #{content, jdbcType=VARCHAR}, #{createdAt, jdbcType=TIMESTAMP}, #{updatedAt, jdbcType=TIMESTAMP})
+        INSERT INTO post (post_id, user_id, title, content, views, created_at, updated_at)
+        VALUES (#{postId}, #{userId}, #{title}, #{content, jdbcType=VARCHAR}, #{views, jdbcType=INTEGER}, #{createdAt, jdbcType=TIMESTAMP}, #{updatedAt, jdbcType=TIMESTAMP})
          <!-- 注意: content 存为 String，需要在 Service 层处理 JSON 序列化 -->
          <!-- 如果数据库 content 是 JSON 类型, 可以用 jdbcType=OTHER, typeHandler=... -->
     </insert>
@@ -45,6 +77,7 @@
         <set>
             <if test="title != null and title != ''">title = #{title},</if>
             <if test="content != null">content = #{content, jdbcType=VARCHAR},</if> <!-- 同上 -->
+            <if test="views != null">views = #{views},</if> <!-- 允许更新 views？通常不在这里更新 -->
             updated_at = NOW(),
         </set>
         WHERE post_id = #{postId}
@@ -66,53 +99,56 @@
     </select>
 
      <select id="findById" resultMap="BaseResultMap">
-        SELECT post_id, user_id, title, content, created_at, updated_at
+        SELECT post_id, user_id, title, content, views, created_at, updated_at
         FROM post p <!-- Added alias for consistency -->
         WHERE post_id = #{postId}
     </select>
 
     <!-- findByUserId, search, findAll 也可以考虑是否 join user 表获取作者信息 -->
     <!-- 这里为了简单，先只查询 Post 基本信息 -->
-     <select id="findByUserId" resultMap="BaseResultMap">
-        SELECT post_id, user_id, title, content, created_at, updated_at
-        FROM post p
+     <select id="findByUserId" resultMap="PostSummaryResultMap">
+        SELECT <include refid="Summary_Columns" />
+        FROM post p JOIN `user` u ON p.user_id = u.user_id
         WHERE p.user_id = #{userId}
         ORDER BY p.created_at DESC
-        LIMIT #{limit} OFFSET #{offset}
+        <!-- LIMIT/OFFSET handled by RowBounds -->
     </select>
 
      <select id="countByUserId" resultType="long">
         SELECT COUNT(*) FROM post WHERE user_id = #{userId}
     </select>
 
-    <select id="search" resultMap="BaseResultMap">
-        SELECT post_id, user_id, title, content, created_at, updated_at
-        FROM post p
-        WHERE title LIKE CONCAT('%', #{keyword}, '%') 
-           OR JSON_UNQUOTE(JSON_EXTRACT(content, '$[*].children[*].text')) LIKE CONCAT('%', #{keyword}, '%') /* 假设 content 是 JSON 且需要搜索文本 */
-           /* JSON 搜索可能较慢，且语法依赖 MySQL 版本 */
-        ORDER BY updated_at DESC, created_at DESC
-        LIMIT #{limit} OFFSET #{offset}
+    <select id="search" resultMap="PostSummaryResultMap">
+        SELECT <include refid="Summary_Columns" />
+        FROM post p JOIN `user` u ON p.user_id = u.user_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (p.title LIKE CONCAT('%', #{keyword}, '%')
+                 OR JSON_UNQUOTE(JSON_EXTRACT(p.content, '$..text')) LIKE CONCAT('%', #{keyword}, '%')
+                 )
+            </if>
+        </where>
+        ORDER BY p.created_at DESC
+         <!-- LIMIT/OFFSET handled by RowBounds -->
     </select>
 
      <select id="countByKeyword" resultType="long">
-        SELECT COUNT(*) 
-        FROM post
-         WHERE title LIKE CONCAT('%', #{keyword}, '%') 
-           OR JSON_UNQUOTE(JSON_EXTRACT(content, '$[*].children[*].text')) LIKE CONCAT('%', #{keyword}, '%')
+        SELECT COUNT(*) FROM post p
+        <where>
+             <if test="keyword != null and keyword != ''">
+                 AND (p.title LIKE CONCAT('%', #{keyword}, '%')
+                  OR JSON_UNQUOTE(JSON_EXTRACT(p.content, '$..text')) LIKE CONCAT('%', #{keyword}, '%')
+                  )
+             </if>
+        </where>
     </select>
 
-     <select id="findAll" resultMap="BaseResultMap">
-        SELECT post_id, user_id, title, content, created_at, updated_at
-        FROM post p
+     <select id="findAll" resultMap="PostSummaryResultMap">
+        SELECT <include refid="Summary_Columns" />
+        FROM post p JOIN `user` u ON p.user_id = u.user_id
         ORDER BY p.created_at DESC
-        LIMIT #{limit} OFFSET #{offset}
+        <!-- LIMIT/OFFSET handled by RowBounds -->
     </select>
-
-     <select id="countAll" resultType="long">
-        SELECT COUNT(*) FROM post
-    </select>
-
 
     <!--- Post-Tag Relationship - -->
 
@@ -131,5 +167,64 @@
      <delete id="removeTagFromPost">
         DELETE FROM post_tag WHERE post_id = #{postId} AND tag_id = #{tagId}
     </delete>
+
+    <!-- 查询 Post 梗概列表 -->
+    <select id="selectPostSummaries" resultMap="PostSummaryResultMap">
+        SELECT
+            p.post_id,
+            p.title,
+            p.views,
+            p.created_at,
+            p.updated_at,
+            LEFT(p.content, 80) AS content_summary, -- 截取前 80 字符作为梗概
+            u.user_id AS author_id,
+            u.username AS author_username,
+            u.avatar_url AS author_avatar_url,
+            (SELECT COUNT(*) FROM `comment` c WHERE c.post_id = p.post_id) AS comment_count,
+            (SELECT COUNT(*) FROM post_evaluation pe WHERE pe.post_id = p.post_id AND pe.evaluation_type = 'LIKE') AS likes_count,
+            (SELECT COUNT(*) FROM post_evaluation pe WHERE pe.post_id = p.post_id AND pe.evaluation_type = 'DISLIKE') AS dislikes_count
+        FROM
+            post p
+        JOIN
+            `user` u ON p.user_id = u.user_id
+        ORDER BY
+            p.created_at DESC -- 或其他排序方式
+        -- LIMIT 和 OFFSET 由 RowBounds 处理
+    </select>
+
+    <!-- 计算帖子总数 -->
+    <select id="countPosts" resultType="long">
+        SELECT COUNT(*) FROM post
+    </select>
+
+    <!-- 增加浏览量 -->
+    <update id="incrementViewCount">
+        UPDATE post
+        SET views = views + 1
+        WHERE post_id = #{postId}
+    </update>
+
+    <!-- 查询评价 -->
+    <select id="findEvaluation" resultType="com.rei.algo.model.entity.PostEvaluation">
+        SELECT
+            post_id, user_id, evaluation_type, created_at, updated_at
+        FROM post_evaluation
+        WHERE post_id = #{postId} AND user_id = #{userId}
+    </select>
+
+    <!-- 插入评价 -->
+    <insert id="insertEvaluation" parameterType="com.rei.algo.model.entity.PostEvaluation">
+        INSERT INTO post_evaluation (post_id, user_id, evaluation_type, created_at, updated_at)
+        VALUES (#{postId}, #{userId}, #{evaluationType, typeHandler=org.apache.ibatis.type.EnumTypeHandler}, NOW(), NOW())
+    </insert>
+
+    <!-- 更新评价 -->
+    <update id="updateEvaluation" parameterType="com.rei.algo.model.entity.PostEvaluation">
+        UPDATE post_evaluation
+        SET
+            evaluation_type = #{evaluationType, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            updated_at = NOW()
+        WHERE post_id = #{postId} AND user_id = #{userId}
+    </update>
 
 </mapper> 

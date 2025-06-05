@@ -71,11 +71,15 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ErrorResponse handleAuthenticationException(AuthenticationException ex) {
         log.warn("Authentication Failed: {}", ex.getMessage());
+        String message = "用户名或密码错误";
+        if (ex.getMessage() != null && ex.getMessage().contains("Bad credentials")) {
+            message = "用户名或密码错误";
+        }
         return new ErrorResponse(
                 LocalDateTime.now(),
                 HttpStatus.UNAUTHORIZED.value(),
                 "Unauthorized",
-                 "Authentication failed: " + ex.getMessage(), // Provide a clearer message
+                message,
                 null, null
         );
     }

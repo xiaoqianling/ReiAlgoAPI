@@ -8,7 +8,7 @@ import com.rei.algo.mapper.UserMapper;
 import com.rei.algo.model.entity.Role;
 import com.rei.algo.model.entity.User;
 import com.rei.algo.service.UserService;
-import com.rei.algo.util.IDGenerator; // Assuming class name is IDGenerator based on previous edit
+import com.rei.algo.util.IDGenerator;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,69 +16,65 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.context.annotation.Lazy;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
-//@RequiredArgsConstructor // 由于需要手动添加 @Lazy，移除 Lombok 的构造函数生成
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder; // PasswordEncoder 将被延迟加载
+    private final PasswordEncoder passwordEncoder;
 
-    // 手动添加构造函数并对 PasswordEncoder 使用 @Lazy
     public UserServiceImpl(UserMapper userMapper, @Lazy PasswordEncoder passwordEncoder) {
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
     }
 
-    // --- UserDetailsService Implementation --- //
-
-    /**
-     * Locates the user based on the username. Used by Spring Security.
-     */
     @Override
-    @Transactional(readOnly = true) // Read-only transaction
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        log.debug("Loading user by username: {}", username);
         return userMapper.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("用户名或密码错误"));
     }
 
-    // --- UserService Implementation --- //
-
     @Override
-    @Transactional // Default transaction propagation (REQUIRED)
+    @Transactional
     public UserDTO registerUser(RegisterRequestDTO registerRequest) {
-        // Validation is handled by @Valid in controller
-
-        // Check for existing username
+        log.debug("Registering new user: {}", registerRequest.getUsername());
+        
+        // 检查用户名是否存在
         if (userMapper.existsByUsername(registerRequest.getUsername())) {
             throw new IllegalArgumentException("用户名已存在: " + registerRequest.getUsername());
         }
-        // Check for existing email ONLY IF email is provided
+        
+        // 检查邮箱是否存在
         if (registerRequest.getEmail() != null && !registerRequest.getEmail().trim().isEmpty()) {
-             if (userMapper.existsByEmail(registerRequest.getEmail())) {
+            if (userMapper.existsByEmail(registerRequest.getEmail())) {
                 throw new IllegalArgumentException("邮箱已存在: " + registerRequest.getEmail());
-             }
+            }
         }
 
-        // Generate unique User ID
+        // 生成用户ID
         String userId = IDGenerator.generateUserId();
 
+        // 创建新用户
         User newUser = User.builder()
                 .userId(userId)
                 .username(registerRequest.getUsername())
-                .password(passwordEncoder.encode(registerRequest.getPassword())) // Get password from new DTO
-                .email(registerRequest.getEmail()) // Get email from new DTO
-                .role(Role.USER) // Always set Role to USER
-                .avatarUrl(null) // Always null on registration
+                .password(passwordEncoder.encode(registerRequest.getPassword()))
+                .email(registerRequest.getEmail())
+                .role(Role.USER)
+                .avatarUrl(null)
                 .createdAt(LocalDateTime.now())
                 .build();
 
+        log.debug("Saving new user to database: {}", newUser.getUsername());
         userMapper.insert(newUser);
 
-        // Return DTO without password
         return newUser.convertToDTO();
     }
 
@@ -94,55 +90,45 @@ public class UserServiceImpl implements UserService {
         return userMapper.findByUsername(username);
     }
 
-
     @Override
     @Transactional
     public UserDTO updateUserProfile(String userId, UserProfileUpdateDTO updateRequest) {
-         Assert.notNull(userId, "User ID cannot be null");
-         Assert.notNull(updateRequest, "Update request cannot be null");
+        Assert.notNull(userId, "User ID cannot be null");
+        Assert.notNull(updateRequest, "Update request cannot be null");
 
-        // 1. Find existing user
+        // 查找现有用户
         User existingUser = userMapper.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "ID", userId)); // Use specific exception
+                .orElseThrow(() -> new ResourceNotFoundException("User", "ID", userId));
 
-        // 2. Security Check is handled in Controller before calling this method
-
-        // 3. Prepare update object (only update allowed fields)
+        // 准备更新对象
         boolean needsUpdate = false;
-        User userToUpdate = User.builder().userId(userId).build(); // Start with just the ID
+        User userToUpdate = User.builder().userId(userId).build();
 
-        // Check and set email if provided and different
+        // 检查并设置邮箱
         if (updateRequest.getEmail() != null && !updateRequest.getEmail().equals(existingUser.getEmail())) {
-            // Check uniqueness before setting
             if (userMapper.existsByEmail(updateRequest.getEmail())) {
-                 throw new IllegalArgumentException("邮箱已存在: " + updateRequest.getEmail());
+                throw new IllegalArgumentException("邮箱已存在: " + updateRequest.getEmail());
             }
             userToUpdate.setEmail(updateRequest.getEmail());
             needsUpdate = true;
         }
 
-        // Check and set avatarUrl if provided and different
+        // 检查并设置头像URL
         if (updateRequest.getAvatarUrl() != null && !updateRequest.getAvatarUrl().equals(existingUser.getAvatarUrl())) {
             userToUpdate.setAvatarUrl(updateRequest.getAvatarUrl());
             needsUpdate = true;
         }
 
-        // 4. Perform partial update only if there are changes
+        // 执行更新
         if (needsUpdate) {
-             int updatedRows = userMapper.update(userToUpdate); // Assuming update ignores null fields
-             if (updatedRows == 0) {
-                  // This might happen if the user was deleted concurrently, or if update logic fails
-                  throw new RuntimeException("Failed to update user profile for ID: " + userId);
-             }
-             // Re-fetch the user to get the complete updated state
-             existingUser = userMapper.findById(userId).orElseThrow(() -> new RuntimeException("Failed to fetch updated user profile after update for ID: " + userId));
-
+            int updatedRows = userMapper.update(userToUpdate);
+            if (updatedRows == 0) {
+                throw new RuntimeException("Failed to update user profile for ID: " + userId);
+            }
+            existingUser = userMapper.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("Failed to fetch updated user profile after update for ID: " + userId));
         }
-        // If no changes were provided in the DTO, we can just return the existing user data.
 
-        // 5. Return DTO of the (potentially updated) user
         return existingUser.convertToDTO();
     }
-
-     // private User convertToEntity(UserDTO dto) { ... } // Might be needed for updates
 } 

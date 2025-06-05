@@ -1,8 +1,11 @@
 package com.rei.algo.mapper;
 
+import com.rei.algo.DTO.post.PostSummaryDTO;
 import com.rei.algo.model.entity.Post;
+import com.rei.algo.model.entity.PostEvaluation;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.session.RowBounds;
 
 import java.util.List;
 import java.util.Optional;
@@ -48,13 +51,12 @@ public interface PostMapper {
 
 
     /**
-     * 根据用户 ID 查询该用户发布的帖子列表 (可分页)
+     * 根据用户 ID 查询该用户发布的帖子梗概列表 (分页)
      * @param userId 用户 ID
-     * @param offset 偏移量
-     * @param limit 数量
-     * @return 帖子列表 (可能需要包含作者信息)
+     * @param rowBounds 分页参数
+     * @return PostSummaryDTO 列表
      */
-    List<Post> findByUserId(@Param("userId") String userId, @Param("offset") int offset, @Param("limit") int limit);
+    List<PostSummaryDTO> findByUserId(@Param("userId") String userId, RowBounds rowBounds);
 
      /**
      * 计算用户发布的帖子总数
@@ -64,13 +66,12 @@ public interface PostMapper {
     long countByUserId(@Param("userId") String userId);
 
     /**
-     * 根据关键字搜索帖子 (标题或内容，可分页)
+     * 根据关键字搜索帖子梗概 (标题或内容，可分页)
      * @param keyword 关键字
-     * @param offset 偏移量
-     * @param limit 数量
-     * @return 帖子列表 (可能需要包含作者信息)
+     * @param rowBounds 分页参数
+     * @return PostSummaryDTO 列表
      */
-    List<Post> search(@Param("keyword") String keyword, @Param("offset") int offset, @Param("limit") int limit);
+    List<PostSummaryDTO> search(@Param("keyword") String keyword, RowBounds rowBounds);
 
      /**
      * 计算关键字搜索帖子的总数
@@ -81,24 +82,55 @@ public interface PostMapper {
 
 
     /**
-     * 查询所有帖子 (可分页)
-     * @param offset 偏移量
-     * @param limit 数量
-     * @return 帖子列表 (可能需要包含作者信息)
+     * 查询所有帖子梗概 (分页)
+     * @param rowBounds 分页参数
+     * @return PostSummaryDTO 列表
      */
-    List<Post> findAll(@Param("offset") int offset, @Param("limit") int limit);
+    List<PostSummaryDTO> findAll(RowBounds rowBounds);
 
      /**
-     * 计算所有帖子的总数
+     * 计算所有帖子的总数 (用于梗概列表的分页)
      * @return 总数
      */
-    long countAll();
+    long countPosts();
 
+    /**
+     * 增加指定帖子的浏览量
+     *
+     * @param postId 帖子 ID
+     * @return 影响行数
+     */
+    int incrementViewCount(@Param("postId") String postId);
+
+    /**
+     * 查询用户对特定帖子的评价
+     *
+     * @param postId 帖子 ID
+     * @param userId 用户 ID
+     * @return PostEvaluation 实体 (Optional-like, 可能为 null)
+     */
+    PostEvaluation findEvaluation(@Param("postId") String postId, @Param("userId") String userId);
+
+    /**
+     * 插入新的帖子评价
+     *
+     * @param evaluation 评价实体
+     * @return 影响行数
+     */
+    int insertEvaluation(PostEvaluation evaluation);
+
+    /**
+     * 更新已有的帖子评价
+     *
+     * @param evaluation 评价实体 (必须包含 postId 和 userId)
+     * @return 影响行数
+     */
+    int updateEvaluation(PostEvaluation evaluation);
 
     // --- Post-Tag Relationship --- //
 
     /**
-     * 批量插入帖子与标签的关联关系 (通常在 XML 中使用 foreach)
+     * 批量插入帖子与标签的关联关系
      * @param postId 帖子 ID
      * @param tagIds 标签 ID 集合
      * @return 影响行数

@@ -1,6 +1,6 @@
 package com.rei.algo.controller;
 
-import com.rei.algo.DTO.docs.DocsDTO;
+import com.rei.algo.DTO.dosc.DocsDTO;
 import com.rei.algo.service.DocsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;

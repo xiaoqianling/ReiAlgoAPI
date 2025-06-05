@@ -2,7 +2,7 @@ package com.rei.algo.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rei.algo.DTO.docs.DocsDTO;
+import com.rei.algo.DTO.dosc.DocsDTO;
 import com.rei.algo.mapper.DocsMapper;
 import com.rei.algo.model.entity.Docs;
 import com.rei.algo.service.DocsService;
